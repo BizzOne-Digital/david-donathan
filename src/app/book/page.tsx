@@ -3,6 +3,8 @@ import { GoogleCalendarBooking } from "@/components/booking/google-calendar-book
 import { GoogleCalendarSetupGuide } from "@/components/booking/google-calendar-setup-guide";
 import { getResolvedAppointmentConfig } from "@/lib/google-calendar-config";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Book a Meeting",
   description:
@@ -34,7 +36,11 @@ export default function BookPage() {
       <section className="section-shell pt-4">
         <div className="mx-auto max-w-5xl">
           {config.valid ? (
-            <GoogleCalendarBooking bookingUrl={config.bookingUrl} />
+            <GoogleCalendarBooking
+              bookingUrl={config.bookingUrl}
+              embedUrl={config.embedUrl}
+              usedFallback={config.usedFallback}
+            />
           ) : (
             <GoogleCalendarSetupGuide error={config.reason} />
           )}

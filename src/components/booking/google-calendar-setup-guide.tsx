@@ -19,22 +19,19 @@ export function GoogleCalendarSetupGuide({ error }: { error?: string }) {
       )}
 
       <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-300">
-        On <strong className="text-white">Vercel</strong>, go to Settings →
-        Environment Variables and add:
+        In Google Calendar → Appointment schedule → <strong>Share</strong>,
+        copy the <strong>booking page link</strong> (short{" "}
+        <code className="text-cyan-200">calendar.app.google/...</code> works
+        best).
       </p>
 
       <pre className="mt-4 w-full max-w-2xl overflow-x-auto rounded-xl border border-white/10 bg-[#07111f] px-4 py-3 text-left text-xs text-cyan-100">
-        {`GOOGLE_APPOINTMENT_URL=https://calendar.google.com/calendar/appointments/schedules/YOUR_ID?gv=true`}
+        {`GOOGLE_APPOINTMENT_URL=https://calendar.app.google/YOUR_CODE`}
       </pre>
 
-      <p className="mt-4 max-w-xl text-sm text-rose-300">
-        Do NOT use <code>calendar.app.google/...</code> short links — they cause
-        &quot;Dynamic Link Not Found&quot; on Vercel.
-      </p>
-
       <p className="mt-4 max-w-xl text-sm text-slate-400">
-        After saving the variable, click <strong>Redeploy</strong> on Vercel
-        (required for changes to take effect).
+        Add to Vercel → Settings → Environment Variables →{" "}
+        <strong>Redeploy</strong>
       </p>
 
       <a

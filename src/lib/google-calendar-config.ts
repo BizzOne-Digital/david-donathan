@@ -1,29 +1,48 @@
 /**
- * Google Calendar Appointment Schedule configuration.
+ * Google Calendar booking — verified working URLs with env override.
  *
- * Use the FULL iframe src URL from Share → Website embed:
- *   https://calendar.google.com/calendar/appointments/schedules/AcZssZ0...?gv=true
+ * GOOGLE_APPOINTMENT_URL = short link (calendar.app.google/...) for direct booking
+ * GOOGLE_APPOINTMENT_EMBED_URL = optional full embed URL for inline calendar
  *
- * Do NOT use calendar.app.google/ short links.
- *
- * Set GOOGLE_APPOINTMENT_URL in Vercel (Settings → Environment Variables), then redeploy.
+ * Known broken schedule (do not use): AcZssZ2Vnk87...
  */
+
+/** Verified working — tested Aug 2026 */
+export const DEFAULT_BOOKING_URL =
+  "https://calendar.app.google/K3yLS4tnKzaEQhrH7";
+
+export const DEFAULT_EMBED_URL =
+  "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3MifHU_aNxC1QW994rSOvDWUpcwU4-N0GCcvKLwe4K13rfzR9CwXb42FQaIYlyIIsUIrgwn3-n?gv=true";
+
+const BROKEN_SCHEDULE_FRAGMENT =
+  "AcZssZ2Vnk87FOlG3LfccUwuflKQ9abzksw1EcKcHkflErH3M6rr1EMt8-VfeZZtFUSWgqA9D3V6-tgJ";
+
+function readEnv(key: string) {
+  return process.env[key]?.trim() || "";
+}
 
 function readAppointmentUrl() {
   return (
-    process.env.GOOGLE_APPOINTMENT_URL?.trim() ||
-    process.env.NEXT_PUBLIC_GOOGLE_APPOINTMENT_URL?.trim() ||
+    readEnv("GOOGLE_APPOINTMENT_URL") ||
+    readEnv("NEXT_PUBLIC_GOOGLE_APPOINTMENT_URL") ||
     ""
   );
 }
 
+function readEmbedUrl() {
+  return readEnv("GOOGLE_APPOINTMENT_EMBED_URL") || "";
+}
+
 export const googleCalendarConfig = {
   get appointmentUrl() {
-    return readAppointmentUrl();
+    return resolveBookingUrl();
   },
-  calendarId: process.env.GOOGLE_CALENDAR_ID?.trim() || "primary",
-  timezone: process.env.GOOGLE_CALENDAR_TIMEZONE?.trim() || "America/Chicago",
-  clientEmail: process.env.CLIENT_EMAIL || "ddonathan84@gmail.com",
+  get embedUrl() {
+    return resolveEmbedUrl();
+  },
+  calendarId: readEnv("GOOGLE_CALENDAR_ID") || "primary",
+  timezone: readEnv("GOOGLE_CALENDAR_TIMEZONE") || "America/Chicago",
+  clientEmail: readEnv("CLIENT_EMAIL") || "ddonathan84@gmail.com",
   setupUrl:
     "https://support.google.com/calendar/answer/10729749?hl=en",
 };
@@ -33,84 +52,37 @@ const INVALID_PATTERNS = [
   /\.js/i,
   /scheduling-button-script/i,
   /rel=["']stylesheet/i,
-  /stylesheet/i,
-  /calendar\.app\.google/i,
 ];
 
-const VALID_PATTERNS = [/calendar\.google\.com\/calendar\/appointments/i];
-
 export type AppointmentUrlValidation =
-  | { valid: true; embedUrl: string; bookingUrl: string }
+  | {
+      valid: true;
+      bookingUrl: string;
+      embedUrl: string;
+      isShortLink: boolean;
+      usedFallback: boolean;
+    }
   | { valid: false; reason: string };
 
-export function validateGoogleAppointmentUrl(
-  input: string
-): AppointmentUrlValidation {
-  const trimmed = input.trim();
-
-  if (!trimmed) {
-    return { valid: false, reason: "No booking URL configured." };
-  }
-
-  if (trimmed.includes("your-") || trimmed.includes("YOUR_")) {
-    return {
-      valid: false,
-      reason: "Replace the placeholder with your real embed URL.",
-    };
-  }
-
-  for (const pattern of INVALID_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      if (/calendar\.app\.google/i.test(trimmed)) {
-        return {
-          valid: false,
-          reason:
-            'Short links (calendar.app.google/...) break on Vercel. Use the full URL: calendar.google.com/calendar/appointments/schedules/...',
-        };
-      }
-      return {
-        valid: false,
-        reason:
-          'Copy the iframe src URL that contains "/calendar/appointments/schedules/".',
-      };
-    }
-  }
-
-  let url = extractEmbedUrl(trimmed);
-
-  const looksValid = VALID_PATTERNS.some((p) => p.test(url));
-  if (!looksValid) {
-    return {
-      valid: false,
-      reason:
-        'URL must start with https://calendar.google.com/calendar/appointments/schedules/',
-    };
-  }
-
-  const embedUrl = normalizeEmbedUrl(url);
-  const bookingUrl = normalizeBookingUrl(url);
-
-  return { valid: true, embedUrl, bookingUrl };
-}
-
-export function getResolvedAppointmentConfig() {
-  return validateGoogleAppointmentUrl(googleCalendarConfig.appointmentUrl);
-}
-
-export function isGoogleAppointmentConfigured() {
-  return getResolvedAppointmentConfig().valid;
-}
-
-function extractEmbedUrl(input: string): string {
+function extractUrl(input: string): string {
   const iframeMatch = input.match(/src=["']([^"']+)["']/i);
-  if (iframeMatch?.[1]) {
-    return iframeMatch[1].trim();
-  }
+  if (iframeMatch?.[1]) return iframeMatch[1].trim();
   return input.replace(/\s+/g, " ").trim();
 }
 
-/** URL for iframe embed (?gv=true) */
-function normalizeEmbedUrl(url: string): string {
+function isBrokenSchedule(url: string) {
+  return url.includes(BROKEN_SCHEDULE_FRAGMENT);
+}
+
+function isShortLink(url: string) {
+  return /calendar\.app\.google/i.test(url);
+}
+
+function isFullSchedule(url: string) {
+  return /calendar\.google\.com\/calendar\/appointments/i.test(url);
+}
+
+function normalizeEmbed(url: string) {
   try {
     const parsed = new URL(url);
     parsed.searchParams.set("gv", "true");
@@ -120,8 +92,7 @@ function normalizeEmbedUrl(url: string): string {
   }
 }
 
-/** URL for scheduling button + direct link (no gv param) */
-function normalizeBookingUrl(url: string): string {
+function normalizeBooking(url: string) {
   try {
     const parsed = new URL(url);
     parsed.searchParams.delete("gv");
@@ -131,10 +102,75 @@ function normalizeBookingUrl(url: string): string {
   }
 }
 
+function resolveBookingUrl(): string {
+  const raw = readAppointmentUrl();
+  if (!raw || isBrokenSchedule(raw) || raw.includes("YOUR_")) {
+    return DEFAULT_BOOKING_URL;
+  }
+  const url = extractUrl(raw);
+  if (isBrokenSchedule(url)) return DEFAULT_BOOKING_URL;
+  if (isShortLink(url)) return url;
+  if (isFullSchedule(url)) return normalizeBooking(url);
+  return DEFAULT_BOOKING_URL;
+}
+
+function resolveEmbedUrl(): string {
+  const embedEnv = readEmbedUrl();
+  if (embedEnv && !isBrokenSchedule(embedEnv)) {
+    return normalizeEmbed(extractUrl(embedEnv));
+  }
+
+  const raw = readAppointmentUrl();
+  if (raw && isFullSchedule(extractUrl(raw)) && !isBrokenSchedule(raw)) {
+    return normalizeEmbed(extractUrl(raw));
+  }
+
+  return DEFAULT_EMBED_URL;
+}
+
+export function validateGoogleAppointmentUrl(
+  input?: string
+): AppointmentUrlValidation {
+  const raw = input ?? readAppointmentUrl();
+  const usedFallback =
+    !raw ||
+    raw.includes("YOUR_") ||
+    isBrokenSchedule(raw) ||
+    (!isShortLink(extractUrl(raw)) && !isFullSchedule(extractUrl(raw)));
+
+  for (const pattern of INVALID_PATTERNS) {
+    if (pattern.test(raw)) {
+      return {
+        valid: false,
+        reason: "Invalid URL — paste your Google Calendar booking or embed link.",
+      };
+    }
+  }
+
+  const bookingUrl = resolveBookingUrl();
+  const embedUrl = resolveEmbedUrl();
+
+  return {
+    valid: true,
+    bookingUrl,
+    embedUrl,
+    isShortLink: isShortLink(bookingUrl),
+    usedFallback,
+  };
+}
+
+export function getResolvedAppointmentConfig() {
+  return validateGoogleAppointmentUrl();
+}
+
+export function isGoogleAppointmentConfigured() {
+  return getResolvedAppointmentConfig().valid;
+}
+
 export function isGoogleCalendarApiConfigured() {
   return Boolean(
-    process.env.GOOGLE_CLIENT_ID &&
-      process.env.GOOGLE_CLIENT_SECRET &&
-      process.env.GOOGLE_REFRESH_TOKEN
+    readEnv("GOOGLE_CLIENT_ID") &&
+      readEnv("GOOGLE_CLIENT_SECRET") &&
+      readEnv("GOOGLE_REFRESH_TOKEN")
   );
 }
