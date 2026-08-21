@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
-import { GoogleAppointmentEmbed } from "@/components/booking/google-appointment-embed";
+import { GoogleCalendarBooking } from "@/components/booking/google-calendar-booking";
+import { GoogleCalendarSetupGuide } from "@/components/booking/google-calendar-setup-guide";
+import { getResolvedAppointmentConfig } from "@/lib/google-calendar-config";
 
 export const metadata: Metadata = {
   title: "Book a Meeting",
   description:
-    "Schedule a consultation with David Donathan Media using Google Calendar. Pick a time and receive instant confirmation.",
+    "Schedule a consultation with David Donathan Media using Google Calendar.",
 };
 
 export default function BookPage() {
+  const config = getResolvedAppointmentConfig();
+
   return (
     <>
       <section className="relative overflow-hidden pt-28 pb-10">
@@ -29,7 +33,11 @@ export default function BookPage() {
 
       <section className="section-shell pt-4">
         <div className="mx-auto max-w-5xl">
-          <GoogleAppointmentEmbed />
+          {config.valid ? (
+            <GoogleCalendarBooking bookingUrl={config.bookingUrl} />
+          ) : (
+            <GoogleCalendarSetupGuide error={config.reason} />
+          )}
         </div>
       </section>
     </>
