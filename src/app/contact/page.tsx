@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { CalendarClock, CheckCircle2, Mail, Phone } from "lucide-react";
 import { LeadForm } from "@/components/forms/lead-form";
-import { MeetingForm } from "@/components/forms/meeting-form";
 import { FadeIn, SectionHeading } from "@/components/ui/section-heading";
 import { siteConfig } from "@/lib/site-data";
 
@@ -24,8 +23,8 @@ export default function ContactPage() {
               Let&apos;s talk about your next growth move
             </h1>
             <p className="mt-5 max-w-3xl text-lg text-slate-300">
-              Book a meeting on the calendar below, call, email, or send a
-              project brief. David is emailed when a meeting is scheduled.
+              Book a meeting through Google Calendar, call, email, or send a
+              project brief.
             </p>
           </FadeIn>
 
@@ -39,7 +38,7 @@ export default function ContactPage() {
                 Book online
               </p>
               <p className="mt-1 font-display text-2xl text-white">
-                Schedule Meeting
+                Google Calendar
               </p>
             </Link>
             <a
@@ -70,22 +69,11 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section id="book" className="section-shell pt-8">
-        <SectionHeading
-          eyebrow="Schedule Online"
-          title="Book your meeting"
-          description="Pick a date and time, then confirm. David receives an email notification immediately."
-        />
-        <div className="mx-auto mt-10 max-w-4xl">
-          <MeetingForm source="Contact Page" />
-        </div>
-      </section>
-
       <section className="section-shell">
         <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <SectionHeading
             eyebrow="Lead Capture"
-            title="Prefer to send details first?"
+            title="Send your project details"
             description="Share your goals and preferred services. David will follow up within 24 hours."
           />
           <div className="rounded-3xl border border-white/10 bg-[#0a1829] p-6 md:p-8">

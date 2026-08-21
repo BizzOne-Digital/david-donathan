@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { createGoogleCalendarEvent } from "@/lib/google-calendar";
 import { sendMeetingEmails } from "@/lib/email";
+import { isGoogleCalendarApiConfigured } from "@/lib/google-calendar-config";
 import { meetingFormSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
@@ -18,13 +20,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await sendMeetingEmails(parsed.data);
+    let calendarEventId: string | undefined;
+
+    if (isGoogleCalendarApiConfigured()) {
+      const event = await createGoogleCalendarEvent(parsed.data);
+      calendarEventId = event?.id ?? undefined;
+    }
+
+    const emailResult = await sendMeetingEmails(parsed.data);
 
     return NextResponse.json({
       success: true,
-      message:
-        "Your meeting is scheduled! Check your email for confirmation. David has been notified.",
-      result,
+      message: calendarEventId
+        ? "Your meeting is on Google Calendar! Check your email for the invite. David has been notified."
+        : "Your meeting is scheduled! Check your email for confirmation. David has been notified.",
+      result: { ...emailResult, calendarEventId },
     });
   } catch (error) {
     const message =

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { MeetingForm } from "@/components/forms/meeting-form";
+import { GoogleAppointmentEmbed } from "@/components/booking/google-appointment-embed";
 
 export const metadata: Metadata = {
   title: "Book a Meeting",
   description:
-    "Schedule a consultation with David Donathan Media. Pick a date and time — David is notified instantly by email.",
+    "Schedule a consultation with David Donathan Media using Google Calendar. Pick a time and receive instant confirmation.",
 };
 
 export default function BookPage() {
@@ -17,18 +17,19 @@ export default function BookPage() {
             Book a Meeting
           </p>
           <h1 className="mt-3 max-w-3xl font-display text-4xl font-semibold text-white md:text-6xl">
-            Register your meeting with David
+            Schedule with Google Calendar
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-slate-300">
-            Select a date and time below. When you confirm, David gets an email
-            notification that a meeting has been scheduled.
+            Choose an available time below. Google Calendar confirms your booking
+            instantly — David is notified and you receive a calendar invite by
+            email.
           </p>
         </div>
       </section>
 
       <section className="section-shell pt-4">
-        <div className="mx-auto max-w-4xl">
-          <MeetingForm source="Book Page" />
+        <div className="mx-auto max-w-5xl">
+          <GoogleAppointmentEmbed />
         </div>
       </section>
     </>
