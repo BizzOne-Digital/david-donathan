@@ -80,13 +80,13 @@ export function GoogleCalendarBooking({
       </div>
 
       <div className="border-t border-white/10 bg-white">
-        <iframe
+        {/* <iframe
           title="Book a meeting with David Donathan Media"
           src={safeEmbed}
           className="h-[720px] w-full border-0"
           loading="lazy"
           allow="clipboard-read; clipboard-write"
-        />
+        /> */}
       </div>
 
       <div className="flex flex-col items-center border-t border-white/10 bg-[#071320] px-6 py-8">
